@@ -1,0 +1,62 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: hazelcast-cluster-demo
+
+# Hazelcast集群配置
+hazelcast:
+  cluster:
+    name: dev-cluster
+    # 集群成员列表 - 根据实际部署环境修改
+    members:
+      - 127.0.0.1:5701
+      - 127.0.0.1:5702
+      - 127.0.0.1:5703
+    # 网络配置
+    network:
+      port: 5701
+      port-auto-increment: true
+      port-count: 100
+    # 多播发现配置（可选）
+    multicast:
+      enabled: false
+      multicast-group: 224.2.2.3
+      multicast-port: 54327
+    # TCP/IP发现配置
+    tcp-ip:
+      enabled: true
+    # 安全配置（可选）
+    security:
+      enabled: false
+    # 管理中心配置
+    management-center:
+      enabled: false
+      url: http://localhost:8080/mancenter
+
+# 应用配置
+app:
+  cache:
+    # 缓存过期时间（秒）
+    ttl: 3600
+    # 最大缓存条目数
+    max-size: 10000
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,hazelcast
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
+logging:
+  level:
+    com.hazelcast: INFO
+    com.example: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"

@@ -1,0 +1,6 @@
+server:
+  port: 8081
+hazelcast:
+  cluster:
+    network:
+      port: 5701
