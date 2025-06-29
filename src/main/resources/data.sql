@@ -28,8 +28,8 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
 -- Insert users (passwords are encoded with BCrypt)
 -- Password for both users is: "password123"
 INSERT INTO users (username, email, password, first_name, last_name, enabled, account_non_expired, account_non_locked, credentials_non_expired, created_at, updated_at) VALUES
-('user', 'user@example.com', '$2a$10$EblZqNptyYvcLm/VwDCVAuBjzZOI7khzdyGPBr08PpIi0na624b8.', 'John', 'Doe', true, true, true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('admin', 'admin@example.com', '$2a$10$EblZqNptyYvcLm/VwDCVAuBjzZOI7khzdyGPBr08PpIi0na624b8.', 'Admin', 'User', true, true, true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('user', 'user@example.com', '$2a$10$NQuRk7OMCKS2lbZr84yNuOZ3eJv8js.hUohgC7vpTWJL3EbvDITmm', 'John', 'Doe', true, true, true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('admin', 'admin@example.com', '$2a$10$NQuRk7OMCKS2lbZr84yNuOZ3eJv8js.hUohgC7vpTWJL3EbvDITmm', 'Admin', 'User', true, true, true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert user-role mappings
 INSERT INTO user_roles (user_id, role_id) VALUES
