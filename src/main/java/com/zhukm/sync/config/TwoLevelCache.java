@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.hazelcast.map.IMap;
 import org.springframework.cache.support.AbstractValueAdaptingCache;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.util.concurrent.Callable;
@@ -27,18 +28,18 @@ public class TwoLevelCache extends AbstractValueAdaptingCache {
     }
 
     @Override
-    public String getName() {
+    public @NonNull String getName() {
         return this.name;
     }
 
     @Override
-    public Object getNativeCache() {
+    public @NonNull Object getNativeCache() {
         return this.l1Cache;
     }
 
     @Override
     @Nullable
-    protected Object lookup(Object key) {
+    protected Object lookup(@NonNull Object key) {
         // 先从一级缓存查找
         Object value = l1Cache.getIfPresent(key);
         if (value != null) {
@@ -56,15 +57,17 @@ public class TwoLevelCache extends AbstractValueAdaptingCache {
     }
 
     @Override
-    public void put(Object key, @Nullable Object value) {
-        // 同时放入一级和二级缓存
-        l1Cache.put(key, value);
-        l2Cache.put(key, value);
+    public void put(@NonNull Object key, @Nullable Object value) {
+        if(value != null) {
+            // 同时放入一级和二级缓存
+            l1Cache.put(key, value);
+            l2Cache.put(key, value);
+        }
     }
 
     @Override
     @Nullable
-    public ValueWrapper putIfAbsent(Object key, @Nullable Object value) {
+    public ValueWrapper putIfAbsent(@NonNull Object key, @Nullable Object value) {
         Object existingValue = lookup(key);
         if (existingValue == null) {
             put(key, value);
@@ -74,7 +77,7 @@ public class TwoLevelCache extends AbstractValueAdaptingCache {
     }
 
     @Override
-    public void evict(Object key) {
+    public void evict(@NonNull Object key) {
         // 从两级缓存中都删除
         l1Cache.invalidate(key);
         l2Cache.remove(key);
@@ -89,7 +92,7 @@ public class TwoLevelCache extends AbstractValueAdaptingCache {
 
     @Override
     @Nullable
-    public <T> T get(Object key, Callable<T> valueLoader) {
+    public <T> T get(@NonNull Object key, @Nullable Callable<T> valueLoader) {
         Object value = lookup(key);
         if (value != null) {
             return (T) fromStoreValue(value);

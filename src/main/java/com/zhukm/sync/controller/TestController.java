@@ -1,32 +1,28 @@
 package com.zhukm.sync.controller;
 
-import com.zhukm.sync.service.CacheService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/test")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class TestController {
-    private final CacheService cacheService;
 
-    public TestController(CacheService cacheService) {
-        this.cacheService = cacheService;
+    @GetMapping("/public")
+    public ResponseEntity<String> publicAccess() {
+        return ResponseEntity.ok("Public Content - Accessible to everyone");
     }
 
-    @GetMapping("/map/put/{key}/{value}")
-    public String putCache(@PathVariable("key") String key, @PathVariable("value") Object value) {
-        cacheService.put(key, value);
-        return "SUCCESS";
+    @GetMapping("/user")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<String> userAccess() {
+        return ResponseEntity.ok("User Content - Accessible to users and admins");
     }
 
-    @GetMapping("/map/get/{key}")
-    public Object getCache(@PathVariable("key") String key) {
-        return cacheService.get(key);
-    }
-
-    @GetMapping("/map/remove/{key}")
-    public String removeCache(@PathVariable("key") String key) {
-        cacheService.remove(key);
-        return "SUCCESS";
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> adminAccess() {
+        return ResponseEntity.ok("Admin Content - Accessible only to admins");
     }
 }
