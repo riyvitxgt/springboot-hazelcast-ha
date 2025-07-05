@@ -1,10 +1,7 @@
 package com.zhukm.sync;
 
 import com.zhukm.sync.controller.AuthController;
-import com.zhukm.sync.dto.ApiResponse;
-import com.zhukm.sync.dto.AuthResponse;
-import com.zhukm.sync.dto.LoginRequest;
-import com.zhukm.sync.dto.RegisterRequest;
+import com.zhukm.sync.dto.*;
 import com.zhukm.sync.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +36,7 @@ public class AuthControllerTest {
     @Test
     void login_ShouldReturnOkResponse() {
         // 准备模拟响应
-        ApiResponse<AuthResponse> mockResponse = ApiResponse.<AuthResponse>builder()
+        ApiResponse<LoginResponse> mockResponse = ApiResponse.<LoginResponse>builder()
                 .success(true)
                 .message("Login successful")
                 .build();
@@ -48,7 +45,7 @@ public class AuthControllerTest {
         when(authService.login(loginRequest)).thenReturn(mockResponse);
 
         // 执行测试
-        ResponseEntity<ApiResponse<AuthResponse>> response = authController.login(loginRequest);
+        ResponseEntity<ApiResponse<LoginResponse>> response = authController.login(loginRequest);
 
         // 验证结果
         assertEquals(HttpStatus.OK, response.getStatusCode());

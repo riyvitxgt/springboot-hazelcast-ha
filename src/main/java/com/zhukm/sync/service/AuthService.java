@@ -1,9 +1,6 @@
 package com.zhukm.sync.service;
 
-import com.zhukm.sync.dto.ApiResponse;
-import com.zhukm.sync.dto.AuthResponse;
-import com.zhukm.sync.dto.LoginRequest;
-import com.zhukm.sync.dto.RegisterRequest;
+import com.zhukm.sync.dto.*;
 import com.zhukm.sync.entity.Role;
 import com.zhukm.sync.entity.User;
 import com.zhukm.sync.repository.RoleRepository;
@@ -15,7 +12,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,38 +33,39 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     @Transactional
-    public ApiResponse<AuthResponse> login(LoginRequest loginRequest) {
+    public ApiResponse<LoginResponse> login(LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
             );
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtil.generateJwtToken(authentication);
-
-            User user = (User) authentication.getPrincipal();
-            Set<String> roles = user.getRoles().stream()
-                    .map(Role::getName)
-                    .collect(Collectors.toSet());
-
-            Set<String> permissions = user.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toSet());
-
-            AuthResponse authResponse = AuthResponse.builder()
-                    .token(jwt)
-                    .id(user.getId())
-                    .username(user.getUsername())
-                    .email(user.getEmail())
-                    .roles(roles)
-                    .permissions(permissions)
-                    .build();
-
-            return ApiResponse.success("Login successful", authResponse);
+            LoginResponse loginResponse = LoginResponse.builder().token(jwt).build();
+            return ApiResponse.success("Login successful", loginResponse);
         } catch (Exception e) {
             log.error("Login failed for user: {}", loginRequest.getUsername(), e);
             return ApiResponse.error("Invalid credentials");
         }
+    }
+
+    @Transactional
+    public ApiResponse<UserResponse> getSession() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ApiResponse.error("未登录");
+        }
+        User user = (User) authentication.getPrincipal();
+        UserResponse userResponse = UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .enabled(user.isEnabled())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())).build();
+        return ApiResponse.success(userResponse);
     }
 
     @Transactional

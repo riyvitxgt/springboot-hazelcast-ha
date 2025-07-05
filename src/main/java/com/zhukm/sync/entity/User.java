@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude="roles")
 @Builder
-@EqualsAndHashCode
 public class User implements UserDetails {
 
     @Id
@@ -40,18 +40,14 @@ public class User implements UserDetails {
     @Column(name = "last_name")
     private String lastName;
 
-    @Builder.Default
     private Boolean enabled = true;
 
-    @Builder.Default
     @Column(name = "account_non_expired")
     private Boolean accountNonExpired = true;
 
-    @Builder.Default
     @Column(name = "account_non_locked")
     private Boolean accountNonLocked = true;
 
-    @Builder.Default
     @Column(name = "credentials_non_expired")
     private Boolean credentialsNonExpired = true;
 
@@ -67,7 +63,6 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
     @PrePersist

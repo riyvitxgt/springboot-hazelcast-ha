@@ -1,9 +1,6 @@
 package com.zhukm.sync.controller;
 
-import com.zhukm.sync.dto.ApiResponse;
-import com.zhukm.sync.dto.AuthResponse;
-import com.zhukm.sync.dto.LoginRequest;
-import com.zhukm.sync.dto.RegisterRequest;
+import com.zhukm.sync.dto.*;
 import com.zhukm.sync.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +16,20 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
-        ApiResponse<AuthResponse> response = authService.login(loginRequest);
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
+        ApiResponse<LoginResponse> response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<ApiResponse<UserResponse>> getSession() {
+        ApiResponse<UserResponse> response = authService.getSession();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/register")
