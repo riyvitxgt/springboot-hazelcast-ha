@@ -1,6 +1,11 @@
 server:
   port: 8080
 spring:
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 10
   application:
     name: hazelcast-cluster-demo
   # H2 Database Configuration

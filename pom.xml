@@ -10,6 +10,8 @@
         <version>3.5.0</version>
     </parent>
 
+    <packaging>war</packaging>
+
     <groupId>com.zhukm</groupId>
     <artifactId>springboot-hazelcast-ha</artifactId>
     <version>1.0-SNAPSHOT</version>
