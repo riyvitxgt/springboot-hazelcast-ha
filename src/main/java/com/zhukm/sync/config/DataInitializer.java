@@ -12,10 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -28,7 +25,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         if (userRepository.count() == 0) {
             initData();
         }
@@ -59,17 +56,17 @@ public class DataInitializer implements CommandLineRunner {
         Role managerRole = createRole("管理员", "ADMIN", "系统管理员",
                 permissions.subList(0, 10)); // 前10个权限
         Role userRole = createRole("普通用户", "USER", "普通用户",
-                Arrays.asList(permissions.get(0))); // 只有仪表盘查看权限
+                Collections.singletonList(permissions.get(0))); // 只有仪表盘查看权限
 
         roleRepository.saveAll(Arrays.asList(adminRole, managerRole, userRole));
 
         // 创建用户
         User admin = createUser("admin", "admin@example.com", "123456",
-                new HashSet<>(Arrays.asList(adminRole)));
+                new HashSet<>(List.of(adminRole)));
         User manager = createUser("manager", "manager@example.com", "123456",
-                new HashSet<>(Arrays.asList(managerRole)));
+                new HashSet<>(List.of(managerRole)));
         User user = createUser("user", "user@example.com", "123456",
-                new HashSet<>(Arrays.asList(userRole)));
+                new HashSet<>(List.of(userRole)));
 
         userRepository.saveAll(Arrays.asList(admin, manager, user));
 
