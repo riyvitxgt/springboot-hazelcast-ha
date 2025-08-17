@@ -1,40 +1,35 @@
 package com.zhukm.sync.controller;
 
-import com.zhukm.sync.dto.*;
+import com.zhukm.sync.dto.ApiResponse;
+import com.zhukm.sync.dto.LoginRequest;
+import com.zhukm.sync.dto.LoginResponse;
+import com.zhukm.sync.dto.UserDTO;
 import com.zhukm.sync.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
-        ApiResponse<LoginResponse> response = authService.login(loginRequest);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/user")
-    public ResponseEntity<ApiResponse<UserResponse>> getSession() {
-        ApiResponse<UserResponse> response = authService.getSession();
-        return ResponseEntity.ok(response);
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        return ApiResponse.success("登录成功", response);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        return ResponseEntity.ok().build();
+    public ApiResponse<Void> logout() {
+        return ApiResponse.success("退出成功", null);
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        ApiResponse<String> response = authService.register(registerRequest);
-        return ResponseEntity.ok(response);
+    @GetMapping("/session")
+    public ApiResponse<UserDTO> getSession() {
+        UserDTO user = authService.getCurrentUser();
+        return ApiResponse.success(user);
     }
 }

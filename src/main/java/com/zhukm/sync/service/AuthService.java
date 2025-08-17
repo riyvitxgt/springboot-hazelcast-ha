@@ -1,107 +1,58 @@
 package com.zhukm.sync.service;
 
-import com.zhukm.sync.dto.*;
-import com.zhukm.sync.entity.Role;
+import com.zhukm.sync.dto.LoginRequest;
+import com.zhukm.sync.dto.LoginResponse;
+import com.zhukm.sync.dto.UserDTO;
 import com.zhukm.sync.entity.User;
-import com.zhukm.sync.repository.RoleRepository;
+import com.zhukm.sync.mapper.UserMapper;
 import com.zhukm.sync.repository.UserRepository;
-import com.zhukm.sync.util.JwtUtil;
+import com.zhukm.sync.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Transactional
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final UserMapper userMapper;
 
-    @Transactional
-    public ApiResponse<LoginResponse> login(LoginRequest loginRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = jwtUtil.generateJwtToken(authentication);
-            LoginResponse loginResponse = LoginResponse.builder().token(jwt).build();
-            return ApiResponse.success("Login successful", loginResponse);
-        } catch (Exception e) {
-            log.error("Login failed for user: {}", loginRequest.getUsername(), e);
-            return ApiResponse.error("Invalid credentials");
-        }
+    public LoginResponse login(LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = tokenProvider.generateToken(authentication);
+
+        // 更新最后登录时间
+        User user = userRepository.findByUsernameWithRolesAndPermissions(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
+
+        UserDTO userDTO = userMapper.toDTO(user);
+
+        return new LoginResponse(jwt, userDTO, 86400L); // 24小时
     }
 
-    @Transactional
-    public ApiResponse<UserResponse> getSession() {
+    public UserDTO getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ApiResponse.error("未登录");
-        }
-        User user = (User) authentication.getPrincipal();
-        UserResponse userResponse = UserResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .enabled(user.isEnabled())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())).build();
-        return ApiResponse.success(userResponse);
-    }
+        String username = authentication.getName();
 
-    @Transactional
-    @CacheEvict(value = "users", allEntries = true)
-    public ApiResponse<String> register(RegisterRequest registerRequest) {
-        try {
-            if (userRepository.existsByUsername(registerRequest.getUsername())) {
-                return ApiResponse.error("Username is already taken!");
-            }
+        User user = userRepository.findByUsernameWithRolesAndPermissions(username)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
 
-            if (userRepository.existsByEmail(registerRequest.getEmail())) {
-                return ApiResponse.error("Email is already in use!");
-            }
-
-            User user = User.builder()
-                    .username(registerRequest.getUsername())
-                    .email(registerRequest.getEmail())
-                    .password(passwordEncoder.encode(registerRequest.getPassword()))
-                    .firstName(registerRequest.getFirstName())
-                    .lastName(registerRequest.getLastName())
-                    .build();
-
-            // Assign default USER role
-            Role userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            Set<Role> roles = new HashSet<>();
-            roles.add(userRole);
-            user.setRoles(roles);
-
-            userRepository.save(user);
-
-            return ApiResponse.success("User registered successfully!");
-        } catch (Exception e) {
-            log.error("Registration failed for user: {}", registerRequest.getUsername(), e);
-            return ApiResponse.error("Registration failed: " + e.getMessage());
-        }
+        return userMapper.toDTO(user);
     }
 }
-

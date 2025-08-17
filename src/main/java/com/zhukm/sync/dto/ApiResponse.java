@@ -12,30 +12,23 @@ import lombok.NoArgsConstructor;
 public class ApiResponse<T> {
 
     private boolean success;
-
     private String message;
-
     private T data;
+    private int code;
 
     public static <T> ApiResponse<T> success(T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .data(data)
-                .build();
+        return new ApiResponse<>(true, "操作成功", data, 200);
     }
 
     public static <T> ApiResponse<T> success(String message, T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .message(message)
-                .data(data)
-                .build();
+        return new ApiResponse<>(true, message, data, 200);
     }
 
     public static <T> ApiResponse<T> error(String message) {
-        return ApiResponse.<T>builder()
-                .success(false)
-                .message(message)
-                .build();
+        return new ApiResponse<>(false, message, null, 500);
+    }
+
+    public static <T> ApiResponse<T> error(int code, String message) {
+        return new ApiResponse<>(false, message, null, code);
     }
 }
